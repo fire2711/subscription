@@ -1,0 +1,191 @@
+{
+  "app_name": "SubTracker",
+  "personality": "1 iOS-Native Clean (Optimized for Dark-First Utility)",
+  "personality_one_liner": "A highly polished, trustworthy dark-mode finance tracker using deep slate and crisp emerald green, emphasizing clarity and typographic hierarchy.",
+  "color": {
+    "surface": "#09090B",
+    "onSurface": "#FAFAFA",
+    "surfaceSecondary": "#18181B",
+    "onSurfaceSecondary": "#A1A1AA",
+    "surfaceTertiary": "#27272A",
+    "onSurfaceTertiary": "#D4D4D8",
+    "surfaceInverse": "#FAFAFA",
+    "onSurfaceInverse": "#09090B",
+    "brand": "#10B981",
+    "brandPrimary": "#10B981",
+    "onBrandPrimary": "#022C22",
+    "brandSecondary": "#34D399",
+    "onBrandSecondary": "#064E3B",
+    "brandTertiary": "rgba(16, 185, 129, 0.12)",
+    "onBrandTertiary": "#10B981",
+    "success": "#10B981",
+    "onSuccess": "#022C22",
+    "warning": "#F59E0B",
+    "onWarning": "#451A03",
+    "error": "#EF4444",
+    "onError": "#450A0A",
+    "info": "#FAFAFA",
+    "onInfo": "#09090B",
+    "border": "#27272A",
+    "borderStrong": "#3F3F46",
+    "divider": "#18181B"
+  },
+  "typography": {
+    "displayFontFamily": "Space Grotesk",
+    "textFontFamily": "Plus Jakarta Sans",
+    "scale": {
+      "sm": 12,
+      "base": 14,
+      "lg": 16,
+      "xl": 20,
+      "2xl": 24
+    }
+  },
+  "spacing": {
+    "rule": "Generous vertical breathing room for amounts and lists. Tightly coupled groups for settings and forms.",
+    "xs": 4,
+    "sm": 8,
+    "md": 12,
+    "lg": 16,
+    "xl": 24,
+    "2xl": 32,
+    "3xl": 48
+  },
+  "radius_tokens": {
+    "sm": 6,
+    "md": 12,
+    "lg": 20,
+    "pill": 999
+  },
+  "shadow_tier": "0",
+  "navigation": "bottom_tabs",
+  "icon_set": "Phosphor",
+  "glassmorphism": {
+    "enabled": "true",
+    "do's": [
+      "Tab bar (frosted over scrolling lists)",
+      "Sticky 'Total Spend' header over home feed",
+      "Paywall Pro section overlay (blurring locked charts)",
+      "Bottom-sheet handles and form sticky buttons"
+    ],
+    "dont's": [
+      "List rows",
+      "Chips",
+      "Form inputs"
+    ]
+  },
+  "platform_libraries": {
+    "glass": {
+      "ios": "expo-glass-effect",
+      "android": "expo-blur",
+      "low_end_android_fallback": "solid surfaceSecondary"
+    },
+    "image": "expo-image",
+    "blur": "expo-blur",
+    "bottom_sheet": "@gorhom/bottom-sheet",
+    "animation": "react-native-reanimated",
+    "gesture": "react-native-gesture-handler"
+  },
+  "screens": [
+    {
+      "name": "Onboarding",
+      "purpose": "A 3-slide carousel highlighting features.",
+      "states": {
+        "loading": "Centered spinner on surface.",
+        "empty": "N/A",
+        "error": "N/A"
+      },
+      "layout": "Full-bleed background scenes (using subtle gradients and app mockups), bottom 1/3 for text. Pagination dots. Primary CTA 'Get Started' sticky above safe area."
+    },
+    {
+      "name": "Home Dashboard",
+      "purpose": "Show big total spend number and list subscriptions by renewal date.",
+      "states": {
+        "loading": "Skeleton rows mapping the subscription list.",
+        "empty": "Illustration of empty wallet + 'No subscriptions added yet' + 'Add Subscription' primary CTA.",
+        "error": "Failed to load data + Retry button."
+      },
+      "layout": "Sticky large header at the top displaying total spend in Space Grotesk (e.g. '$124.99 / mo'). Below, a vertically scrolling list of cards/rows. Each row has a leading image (logo), title, subtitle (billing cycle), trailing cost, and a brandTertiary chip for 'Days left'."
+    },
+    {
+      "name": "Add Subscription Grid",
+      "purpose": "Quickly add popular services via preset grid.",
+      "states": {
+        "loading": "N/A",
+        "empty": "N/A",
+        "error": "N/A"
+      },
+      "layout": "Search bar at top. 3-column grid (`flexWrap: 'wrap', justifyContent: 'space-between'`) for popular services. Each tile uses `surfaceSecondary`, `md` padding, a 36x36px logo, and brand name. Custom add button at the end."
+    },
+    {
+      "name": "Add/Edit Form",
+      "purpose": "Input cost, billing cycle, category, and date.",
+      "states": {
+        "loading": "Skeleton inputs.",
+        "empty": "N/A",
+        "error": "N/A"
+      },
+      "layout": "Single column form. Labels above inputs. Segmented control (`surfaceTertiary` background, `surfaceSecondary` active toggle) for Weekly/Monthly/Yearly. Primary 'Save' CTA sticky at bottom inside KeyboardAvoidingView."
+    },
+    {
+      "name": "Insights & Paywall Preview",
+      "purpose": "Display category breakdown and tease pro features.",
+      "states": {
+        "loading": "Skeleton pie chart.",
+        "empty": "No data pie chart (greyed out) + 'Add subs to see insights'.",
+        "error": "N/A"
+      },
+      "layout": "Top half: Category Pie Chart with legends. Bottom half: 6-month trend line chart. Pro Paywall overlay: A frosted glass absolute view covering the bottom half, blurring the line chart. Centered 'Upgrade to Pro' button and lock icon."
+    },
+    {
+      "name": "Paywall Modal",
+      "purpose": "Convert free users to Pro with plan comparisons.",
+      "states": {
+        "loading": "Spinner.",
+        "empty": "N/A",
+        "error": "Failed to load plans."
+      },
+      "layout": "Full-screen modal. Blurred dark chart background image with strong top-to-bottom vertical gradient scrim (transparent to #09090B at 70%). High-contrast title. Bullet-point feature list with emerald checks. Plan selection cards (Annual highlighted with emerald border). Sticky 'Get Pro' CTA."
+    }
+  ],
+  "images": {
+    "netflix_logo": {
+      "url": "https://images.unsplash.com/photo-1637363990764-de84fd247b7d?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NTYxNzV8MHwxfHNlYXJjaHwxfHxOZXRmbGl4JTIwbG9nbyUyMHRyYW5zcGFyZW50fGVufDB8fHx8MTc4NDQxODE5OXww&ixlib=rb-4.1.0&q=85",
+      "alt": "Netflix brand mark"
+    },
+    "spotify_logo": {
+      "url": "https://images.unsplash.com/photo-1658489958427-325ded050829?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjAzMjV8MHwxfHNlYXJjaHwxfHxTcG90aWZ5JTIwbG9nbyUyMHRyYW5zcGFyZW50fGVufDB8fHx8MTc4NDQxODE5OXww&ixlib=rb-4.1.0&q=85",
+      "alt": "Spotify brand mark"
+    },
+    "notion_logo": {
+      "url": "https://images.unsplash.com/photo-1683114010575-3ead4403180e?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjAzMzJ8MHwxfHNlYXJjaHwxfHxOb3Rpb24lMjBsb2dvJTIwdHJhbnNwYXJlbnR8ZW58MHx8fHwxNzg0NDE4MTk5fDA&ixlib=rb-4.1.0&q=85",
+      "alt": "Notion brand mark"
+    },
+    "disney_plus_logo": {
+      "url": "https://images.unsplash.com/photo-1662338571362-5ad7a300074a?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA2ODl8MHwxfHNlYXJjaHwxfHxEaXNuZXklMjBQbHVzJTIwbG9nbyUyMHRyYW5zcGFyZW50fGVufDB8fHx8MTc4NDQxODE5OXww&ixlib=rb-4.1.0&q=85",
+      "alt": "Disney Plus brand mark"
+    },
+    "adobe_logo": {
+      "url": "https://images.unsplash.com/photo-1637519290541-0a12b3185485?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjY2NzN8MHwxfHNlYXJjaHwxfHxBZG9iZSUyMENyZWF0aXZlJTIwQ2xvdWQlMjBsb2dvJTIwdHJhbnNwYXJlbnR8ZW58MHx8fHwxNzg0NDE4MTk5fDA&ixlib=rb-4.1.0&q=85",
+      "alt": "Adobe CC brand mark"
+    },
+    "paywall_background": {
+      "url": "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2Njd8MHwxfHNlYXJjaHwxfHxkYXJrJTIwY2luZW1hdGljJTIwcHJlbWl1bSUyMGZpbmFuY2UlMjBjaGFydCUyMGJhY2tncm91bmR8ZW58MHx8fHwxNzg0NDE4MTk5fDA&ixlib=rb-4.1.0&q=85",
+      "alt": "Dark cinematic stock chart background"
+    }
+  },
+  "events": {
+    "primary_button_press": "impactLight",
+    "tab_switch": "selection",
+    "segment_control_change": "selection",
+    "add_subscription_success": "notificationSuccess"
+  },
+  "instructions_to_main_agent": [
+    "Strictly avoid any blue or purple tones. Use only the defined Emerald Green (brandPrimary #10B981) for accents.",
+    "Implement the gradient scrim pattern (transparent to 70%+ #09090B) over the Paywall Background image before placing any text on it.",
+    "For the preset subscription grid, attempt to render the actual logos provided in the images object. For any missing logos (like ChatGPT), fallback to a brandTertiary-tinted circle containing the service initials (e.g. 'CG').",
+    "Use Space Grotesk exclusively for large numeric data (total spend, prices, charts) and Plus Jakarta Sans for all other text.",
+    "Ensure 'Save' and 'Get Pro' buttons remain sticky above the keyboard/home indicator, keeping scrollable content behind them.",
+    "The Insights Pro-locked section must use the glassmorphism approach: blur the underlying charts and use an absolute positioned view with the CTA to tease the content underneath."
+  ]
+}
