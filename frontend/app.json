@@ -1,24 +1,28 @@
 {
   "expo": {
-    "name": "frontend",
+    "name": "SubTracker",
     "slug": "frontend",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "frontend",
-    "userInterfaceStyle": "automatic",
+    "scheme": "subtracker",
+    "userInterfaceStyle": "dark",
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.emergent.renewremind.x1p4vb"
+      "bundleIdentifier": "com.emergent.renewremind.x1p4vb",
+      "infoPlist": {
+        "NSUserNotificationsUsageDescription": "Get reminded before subscriptions renew"
+      }
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
-        "backgroundColor": "#000000"
+        "backgroundColor": "#09090B"
       },
       "edgeToEdgeEnabled": true,
-      "package": "com.emergent.renewremind.x1p4vb"
+      "package": "com.emergent.renewremind.x1p4vb",
+      "permissions": ["SCHEDULE_EXACT_ALARM", "POST_NOTIFICATIONS"]
     },
     "web": {
       "bundler": "metro",
@@ -33,7 +37,13 @@
           "image": "./assets/images/splash-image.png",
           "imageWidth": 200,
           "resizeMode": "contain",
-          "backgroundColor": "#000000"
+          "backgroundColor": "#09090B"
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "color": "#10B981"
         }
       ]
     ],
