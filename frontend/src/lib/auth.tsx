@@ -2,6 +2,14 @@ import React, { createContext, useContext, useEffect, useState, useCallback } fr
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { Session } from '@supabase/supabase-js';
 import { supabase } from './supabase';
+import {
+  configurePurchases,
+  loginPurchases,
+  logoutPurchases,
+  isProFromCustomerInfo,
+  addCustomerInfoListener,
+  restorePurchases as rcRestorePurchases,
+} from './revenuecat';
 
 export type Profile = {
   id: string;
@@ -25,7 +33,8 @@ type AuthState = {
   signOut: () => Promise<void>;
   continueAsGuest: () => Promise<void>;
   resetPassword: (email: string) => Promise<{ error?: string }>;
-  setPro: (v: boolean) => Promise<void>; // MOCKED paywall
+  setPro: (v: boolean) => Promise<void>;
+  restorePurchases: () => Promise<boolean>;
   updatePrefs: (p: Partial<Profile>) => Promise<void>;
   deleteAccount: () => Promise<{ error?: string }>;
 };
@@ -74,6 +83,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   useEffect(() => {
+    configurePurchases();
+  }, []);
+
+  useEffect(() => {
     (async () => {
       const guest = await AsyncStorage.getItem(GUEST_KEY);
       const { data } = await supabase.auth.getSession();
@@ -81,6 +94,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setSession(data.session);
         setIsGuest(false);
         await loadProfile(data.session.user.id, data.session.user.email ?? null);
+        await loginPurchases(data.session.user.id);
       } else if (guest === '1') {
         setIsGuest(true);
         await loadGuestPrefs();
@@ -94,12 +108,36 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setIsGuest(false);
         await AsyncStorage.removeItem(GUEST_KEY);
         await loadProfile(s.user.id, s.user.email ?? null);
+        await loginPurchases(s.user.id);
       } else {
         setProfile(null);
       }
     });
     return () => sub.subscription.unsubscribe();
   }, [loadProfile, loadGuestPrefs]);
+
+  // Keep subscription_tier in sync with RevenueCat's source of truth. This
+  // catches purchases, renewals, cancellations, refunds, and restores that
+  // may happen outside of an explicit purchase() call (e.g. App Store).
+  useEffect(() => {
+    const remove = addCustomerInfoListener((info) => {
+      const proNow = isProFromCustomerInfo(info);
+      setProfile((prev) => {
+        if (!prev) return prev;
+        const currentlyPro = prev.subscription_tier === 'pro';
+        if (currentlyPro === proNow) return prev;
+        const tier: 'free' | 'pro' = proNow ? 'pro' : 'free';
+        const next = { ...prev, subscription_tier: tier };
+        if (session) {
+          supabase.from('profiles').update({ subscription_tier: tier }).eq('id', session.user.id);
+        } else {
+          AsyncStorage.setItem(GUEST_PREFS_KEY, JSON.stringify(next));
+        }
+        return next;
+      });
+    });
+    return remove;
+  }, [session]);
 
   const signInEmail = async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
@@ -114,6 +152,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signOut = async () => {
     await supabase.auth.signOut();
     await AsyncStorage.removeItem(GUEST_KEY);
+    await logoutPurchases();
     setIsGuest(false);
     setProfile(null);
   };
@@ -139,6 +178,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setProfile(next);
       await AsyncStorage.setItem(GUEST_PREFS_KEY, JSON.stringify(next));
     }
+  };
+
+  const restorePurchases = async (): Promise<boolean> => {
+    const info = await rcRestorePurchases();
+    const proNow = isProFromCustomerInfo(info);
+    await setPro(proNow);
+    return proNow;
   };
 
   const updatePrefs = async (p: Partial<Profile>) => {
@@ -180,6 +226,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         continueAsGuest,
         resetPassword,
         setPro,
+        restorePurchases,
         updatePrefs,
         deleteAccount,
       }}
