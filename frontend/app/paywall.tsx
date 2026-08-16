@@ -1,12 +1,14 @@
-import { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
+import { useEffect, useState } from 'react';
+import { View, Text, StyleSheet, ScrollView, Pressable, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import Ionicons from '@expo/vector-icons/Ionicons';
+import type { PurchasesOffering, PurchasesPackage } from 'react-native-purchases';
 import { Button } from '@/src/lib/ui';
 import { useAuth } from '@/src/lib/auth';
 import { C, F, R, S } from '@/src/lib/constants';
+import { fetchOfferings, purchasePackage, isProFromCustomerInfo } from '@/src/lib/revenuecat';
 
 type Plan = 'monthly' | 'yearly';
 
@@ -18,26 +20,69 @@ const FEATURES = [
   'Priority updates & new features',
 ];
 
+// Fallback display prices, used only if RevenueCat offerings can't be
+// fetched (e.g. running in Expo Go, or no network). Real prices from the
+// App Store / Play Store are used whenever available.
+const FALLBACK_PRICE = { monthly: '$2.99', yearly: '$19.99' };
+
 export default function Paywall() {
   const router = useRouter();
-  const { setPro } = useAuth();
+  const { setPro, restorePurchases } = useAuth();
   const [plan, setPlan] = useState<Plan>('yearly');
   const [buying, setBuying] = useState(false);
+  const [restoring, setRestoring] = useState(false);
+  const [offering, setOffering] = useState<PurchasesOffering | null>(null);
+  const [loadingOffering, setLoadingOffering] = useState(true);
+
+  useEffect(() => {
+    (async () => {
+      const current = await fetchOfferings();
+      setOffering(current);
+      setLoadingOffering(false);
+    })();
+  }, []);
+
+  const monthlyPkg: PurchasesPackage | undefined = offering?.monthly ?? undefined;
+  const yearlyPkg: PurchasesPackage | undefined = offering?.annual ?? undefined;
+  const selectedPkg = plan === 'monthly' ? monthlyPkg : yearlyPkg;
+
+  const monthlyPrice = monthlyPkg?.product.priceString ?? FALLBACK_PRICE.monthly;
+  const yearlyPrice = yearlyPkg?.product.priceString ?? FALLBACK_PRICE.yearly;
+  const hasLiveOffering = !!offering;
 
   const purchase = async () => {
+    if (!selectedPkg) {
+      // No RevenueCat offering available (e.g. Expo Go / dev build without
+      // native purchases). Can't process a real payment here.
+      Alert.alert(
+        'Purchases unavailable',
+        'In-app purchases require a production build with RevenueCat configured. This preview build can\'t process real payments.'
+      );
+      return;
+    }
     setBuying(true);
-    // MOCKED — RevenueCat requires real device builds. Simulate success.
-    await new Promise(r => setTimeout(r, 800));
-    await setPro(true);
+    const { customerInfo, cancelled, error } = await purchasePackage(selectedPkg);
     setBuying(false);
-    router.back();
+    if (cancelled) return;
+    if (error) {
+      Alert.alert('Purchase failed', error);
+      return;
+    }
+    if (isProFromCustomerInfo(customerInfo)) {
+      await setPro(true);
+      router.back();
+    }
   };
 
   const restore = async () => {
-    setBuying(true);
-    await new Promise(r => setTimeout(r, 500));
-    setBuying(false);
-    // In mock mode, restore is a no-op.
+    setRestoring(true);
+    const isPro = await restorePurchases();
+    setRestoring(false);
+    if (isPro) {
+      router.back();
+    } else {
+      Alert.alert('No purchases found', "We couldn't find an active Pro subscription for this account.");
+    }
   };
 
   return (
@@ -77,7 +122,7 @@ export default function Paywall() {
           >
             <View style={{ flex: 1 }}>
               <Text style={styles.planTitle}>Monthly</Text>
-              <Text style={styles.planPrice}>$2.99<Text style={styles.planPer}>/mo</Text></Text>
+              <Text style={styles.planPrice}>{monthlyPrice}<Text style={styles.planPer}>/mo</Text></Text>
             </View>
             <View style={[styles.radio, plan === 'monthly' && styles.radioActive]} />
           </Pressable>
@@ -92,8 +137,12 @@ export default function Paywall() {
                 <Text style={styles.planTitle}>Yearly</Text>
                 <View style={styles.saveBadge}><Text style={styles.saveText}>SAVE 44%</Text></View>
               </View>
-              <Text style={styles.planPrice}>$19.99<Text style={styles.planPer}>/yr</Text></Text>
-              <Text style={styles.trialText}>7 days free, then $19.99/year</Text>
+              <Text style={styles.planPrice}>{yearlyPrice}<Text style={styles.planPer}>/yr</Text></Text>
+              {!!yearlyPkg?.product.introPrice && (
+                <Text style={styles.trialText}>
+                  {yearlyPkg.product.introPrice.periodNumberOfUnits}-{yearlyPkg.product.introPrice.periodUnit.toLowerCase()} free trial, then {yearlyPrice}/year
+                </Text>
+              )}
             </View>
             <View style={[styles.radio, plan === 'yearly' && styles.radioActive]} />
           </Pressable>
@@ -104,15 +153,17 @@ export default function Paywall() {
             testID="paywall-purchase-btn"
             title={plan === 'yearly' ? 'Start Free Trial' : 'Upgrade to Pro'}
             onPress={purchase}
-            loading={buying}
+            loading={buying || loadingOffering}
           />
-          <Pressable testID="paywall-restore-btn" onPress={restore}>
-            <Text style={styles.restore}>Restore Purchases</Text>
+          <Pressable testID="paywall-restore-btn" onPress={restore} disabled={restoring}>
+            <Text style={styles.restore}>{restoring ? 'Restoring…' : 'Restore Purchases'}</Text>
           </Pressable>
         </View>
 
         <Text style={styles.disclaimer}>
-          Payments are simulated in this preview. Real subscriptions ship with the production build.
+          {hasLiveOffering
+            ? 'Payment will be charged to your App Store or Google Play account. Subscriptions renew automatically unless cancelled at least 24 hours before the end of the current period.'
+            : "Purchases unavailable in this build. Install via TestFlight/production build with RevenueCat configured to buy Pro."}
         </Text>
       </ScrollView>
     </SafeAreaView>
